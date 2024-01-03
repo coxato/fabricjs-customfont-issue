@@ -1,0 +1,63 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>fabricjs test</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/fabric.js/460/fabric.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/fontfaceobserver/2.3.0/fontfaceobserver.standalone.js"></script>
+    <style>
+        @font-face {
+            font-family: 'Fb Absoluti Con';
+            src: url('http://localhost:3000/fbabsoluti.otf') format('OpenType');
+            font-weight: 600;
+            font-style: normal;
+            font-display: normal;
+        }
+    </style>
+</head>
+<body>
+    <canvas id="canvas"></canvas>
+
+    <script>
+        const fontFamily = 'Fb Absoluti Con';
+        const canvasElmt = document.getElementById('canvas');
+        const canvas = new fabric.Canvas(canvasElmt, {
+            width: 400,
+            height: 400,
+            backgroundColor: 'lightgrey',
+        });
+
+        fabric.util.clearFabricFontCache(fontFamily);
+
+        const txt = new fabric.Textbox('זיידענפעלד', {
+            left: 10,
+            top: 20,
+            fontFamily,
+            fontWeight: 600,
+            direction: 'rtl',
+            textAlign: 'right',
+            fontSize: 40
+        });
+        canvas.add(txt);
+        canvas.renderAll();
+
+        function forceRenderUpdate() {
+            for (const obj of canvas.getObjects()) {
+                const originalFontSize = obj.fontSize;
+                obj.fontSize = obj.fontSize + 3;
+                canvas.renderAll();
+                obj.fontSize = originalFontSize;
+                canvas.renderAll();
+            }
+        }
+
+        const fontObserver = new FontFaceObserver(fontFamily);
+
+        fontObserver.load('זיידענפעלד', 2000).then(() => {
+            console.log('font loaded');
+            forceRenderUpdate();
+        });
+    </script>
+</body>
+</html>
