@@ -58,12 +58,12 @@ function createCanvasAndSaveImage({ fullFamilyName, fontWeight, specialTxt }) {
         height: 800,
         backgroundColor: 'white',
     });
-    const txt = new fabric.Textbox('font FONT ABC abc 123 ' + specialTxt, {
+    const txt = new fabric.Textbox(specialTxt, {
         left: 10,
         top: 20,
         fontFamily: fullFamilyName,
         fontWeight,
-        fontSize: 35,
+        fontSize: 100,
         fill: 'black',
         width: 1200
     });
@@ -81,8 +81,8 @@ function createCanvasAndSaveImage({ fullFamilyName, fontWeight, specialTxt }) {
 
 
 const FONTS = [
-    { path: path.join(__dirname, 'public', '1Nfp2-XVhd34MZT8D1c4a.otf'), specialTxt: 'tropical summer public' },
-    { path: path.join(__dirname, 'public', 'LW86SlYaHwPxlfuHYEQPv.ttf'), specialTxt: 'Lia Rozeta public' },
+    { path: path.join(__dirname, 'public', '1Nfp2-XVhd34MZT8D1c4a.otf'), specialTxt: 'Chayala' },
+    { path: path.join(__dirname, 'public', 'LW86SlYaHwPxlfuHYEQPv.ttf'), specialTxt: 'Lia Rozeta' },
 ]
 
 async function runTest() {
