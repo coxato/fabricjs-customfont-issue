@@ -51,7 +51,7 @@ function registerFont(fontPath, fontFamily, weight = 'normal') {
 }
 
 
-function createCanvasAndSaveImage({ fullFamilyName, fontWeight, specialTxt }) {
+function createCanvasAndSaveImage({ fontFamily, fontWeight, specialTxt }) {
     // create canvas and add text
     const canvas = new fabric.StaticCanvas(null, {
         width: 1200,
@@ -61,7 +61,7 @@ function createCanvasAndSaveImage({ fullFamilyName, fontWeight, specialTxt }) {
     const txt = new fabric.Textbox(specialTxt, {
         left: 10,
         top: 20,
-        fontFamily: fullFamilyName,
+        fontFamily: fontFamily,
         fontWeight,
         fontSize: 100,
         fill: 'black',
@@ -83,18 +83,19 @@ function createCanvasAndSaveImage({ fullFamilyName, fontWeight, specialTxt }) {
 const FONTS = [
     { path: path.join(__dirname, 'public', '1Nfp2-XVhd34MZT8D1c4a.otf'), specialTxt: 'Chayala' },
     { path: path.join(__dirname, 'public', 'LW86SlYaHwPxlfuHYEQPv.ttf'), specialTxt: 'Lia Rozeta' },
+    { path: path.join(__dirname, 'public', 'eRha8YqhC6fIlgBqnskih.otf'), specialTxt: 'בבית מורי חמי' },
 ]
 
 async function runTest() {
     
     for (const fontObj of FONTS) {
-        const { fontFullName,  preferredFamily } = await readFontProperties(fontObj.path);
+        const { fontFullName, fontFamily,  preferredFamily } = await readFontProperties(fontObj.path);
         const weight = 'normal'
 
         registerFont(fontObj.path, preferredFamily || fontFullName, weight);
         
         createCanvasAndSaveImage({
-            fullFamilyName: fontFullName,
+            fontFamily,
             fontWeight: weight,
             specialTxt: fontObj.specialTxt
         });
