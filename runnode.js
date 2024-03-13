@@ -3,8 +3,7 @@ const path = require('path');
 const fsPromises = require('fs/promises');
 const express = require('express');
 const opentypeJs = require('opentype.js');
-const wawoff2 = require('wawoff2');
-// const stringify = require('json-stringify-safe')
+const fontkit = require('fontkit');
 
 const app = express();
 // public
@@ -12,37 +11,42 @@ app.use(express.static(path.join(__dirname, 'public')));
 app.use('/generated', express.static(path.join(__dirname, 'generated')));
 
 
-async function readFontProperties(fontPath) {
+function readWOFF2FontProperties(fontPath) {
+    return new Promise((resolve, reject) => {
+        fontkit.open(fontPath, null, (err, fontProps) => {
+            if(err){
+                console.log('[ERROR] cannot read .woff2 font properties ' + err.message);
+                reject(new Error(err.message));
+                return;
+            }
+
+            const { familyName, fullName } = fontProps;
+
+            resolve({
+                fontFamily: familyName,
+                fontFullName: fullName,
+                preferredFamily: familyName,
+            })
+        });
+    })
+}
+
+
+async function readStandardFontProperties(fontPath) {
     try {
-        const bufferRaw = await fsPromises.readFile(fontPath); 
-        let bufferForWoff2Raw = null;
-        const isWoff2 = path.extname(fontPath).toLowerCase() === '.woff2';
-        console.log('is woff2', isWoff2);
+        const bufferRaw = await fsPromises.readFile(fontPath);
+        const fontProps = opentypeJs.parse(bufferRaw.buffer);
 
-        if(isWoff2){
-            bufferForWoff2Raw = await wawoff2.decompress(bufferRaw)
-            console.log(bufferForWoff2Raw);
-        }
-
-        const fontBufferArr = isWoff2 ? bufferForWoff2Raw.buffer : bufferRaw.buffer;
-
-        const fontProps = opentypeJs.parse(fontBufferArr);
-    
-        const { fontFamily, fontSubfamily, fullName, preferredFamily, preferredSubfamily } = fontProps.names;
-        // await fsPromises.writeFile('fontprops.json', stringify(fontProps))
-        console.log({fontFamily, fontSubfamily, fullName, preferredFamily, preferredSubfamily});
+        const { fontFamily, fullName, preferredFamily } = fontProps.names;
 
         // because is an object { fontFamily: { en: 'string' } }
         return {
             fontFamily: Object.values(fontFamily)[0],
             fontFullName: Object.values(fullName)[0],
-            fontSubfamily: Object.values(fontSubfamily)[0],
             preferredFamily: Object.values(preferredFamily || {})[0],
-            preferredSubfamily: Object.values(preferredSubfamily || {})[0]
         }
-        
     } catch (err) {
-        console.log('[ERROR] cannot read font properties ' + err.message);
+        console.log('[ERROR] cannot read standard font properties ' + err.message);
         throw new Error(err.message);
     }
 }
@@ -93,17 +97,22 @@ function createCanvasAndSaveImage({ fontFamily, fontWeight, specialTxt }) {
 
 
 const FONTS = [
-    // { path: path.join(__dirname, 'public', '1Nfp2-XVhd34MZT8D1c4a.otf'), specialTxt: 'Chayala' },
-    // { path: path.join(__dirname, 'public', 'LW86SlYaHwPxlfuHYEQPv.ttf'), specialTxt: 'Lia Rozeta' },
-    // { path: path.join(__dirname, 'public', 'eRha8YqhC6fIlgBqnskih.otf'), specialTxt: 'בבית מורי חמי' },
+    { path: path.join(__dirname, 'public', '1Nfp2-XVhd34MZT8D1c4a.otf'), specialTxt: 'Chayala' },
+    { path: path.join(__dirname, 'public', 'LW86SlYaHwPxlfuHYEQPv.ttf'), specialTxt: 'Lia Rozeta' },
+    { path: path.join(__dirname, 'public', 'eRha8YqhC6fIlgBqnskih.otf'), specialTxt: 'בבית מורי חמי' },
     { path: path.join(__dirname, 'public', 'kJMnXVWMzrllXz5YdYWAM.woff2'), specialTxt: 'בביי חמי' },
     { path: path.join(__dirname, 'public', 'kJMnXVWMzrllXz5YdYWAM.woff2'), specialTxt: 'test woff2' },
 ]
 
-async function runTest() {
-    
+
+async function runTest() {    
     for (const fontObj of FONTS) {
-        const { fontFullName, fontFamily,  preferredFamily } = await readFontProperties(fontObj.path);
+        const isWoff2 = path.extname(fontObj.path).toLowerCase() === '.woff2';
+
+        const readFontProps = isWoff2 ? readWOFF2FontProperties : readStandardFontProperties;
+        const fontProps = await readFontProps(fontObj.path);
+        const { fontFullName, fontFamily,  preferredFamily } = fontProps;
+
         const weight = 'normal'
 
         registerFont(fontObj.path, preferredFamily || fontFullName, weight);
