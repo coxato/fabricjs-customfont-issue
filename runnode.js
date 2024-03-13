@@ -3,6 +3,7 @@ const path = require('path');
 const fsPromises = require('fs/promises');
 const express = require('express');
 const opentypeJs = require('opentype.js');
+const wawoff2 = require('wawoff2');
 // const stringify = require('json-stringify-safe')
 
 const app = express();
@@ -13,8 +14,19 @@ app.use('/generated', express.static(path.join(__dirname, 'generated')));
 
 async function readFontProperties(fontPath) {
     try {
-        const buffer = await fsPromises.readFile(fontPath); 
-        const fontProps = opentypeJs.parse(buffer.buffer)
+        const bufferRaw = await fsPromises.readFile(fontPath); 
+        let bufferForWoff2Raw = null;
+        const isWoff2 = path.extname(fontPath).toLowerCase() === '.woff2';
+        console.log('is woff2', isWoff2);
+
+        if(isWoff2){
+            bufferForWoff2Raw = await wawoff2.decompress(bufferRaw)
+            console.log(bufferForWoff2Raw);
+        }
+
+        const fontBufferArr = isWoff2 ? bufferForWoff2Raw.buffer : bufferRaw.buffer;
+
+        const fontProps = opentypeJs.parse(fontBufferArr);
     
         const { fontFamily, fontSubfamily, fullName, preferredFamily, preferredSubfamily } = fontProps.names;
         // await fsPromises.writeFile('fontprops.json', stringify(fontProps))
@@ -81,9 +93,11 @@ function createCanvasAndSaveImage({ fontFamily, fontWeight, specialTxt }) {
 
 
 const FONTS = [
-    { path: path.join(__dirname, 'public', '1Nfp2-XVhd34MZT8D1c4a.otf'), specialTxt: 'Chayala' },
-    { path: path.join(__dirname, 'public', 'LW86SlYaHwPxlfuHYEQPv.ttf'), specialTxt: 'Lia Rozeta' },
-    { path: path.join(__dirname, 'public', 'eRha8YqhC6fIlgBqnskih.otf'), specialTxt: 'בבית מורי חמי' },
+    // { path: path.join(__dirname, 'public', '1Nfp2-XVhd34MZT8D1c4a.otf'), specialTxt: 'Chayala' },
+    // { path: path.join(__dirname, 'public', 'LW86SlYaHwPxlfuHYEQPv.ttf'), specialTxt: 'Lia Rozeta' },
+    // { path: path.join(__dirname, 'public', 'eRha8YqhC6fIlgBqnskih.otf'), specialTxt: 'בבית מורי חמי' },
+    { path: path.join(__dirname, 'public', 'kJMnXVWMzrllXz5YdYWAM.woff2'), specialTxt: 'בביי חמי' },
+    { path: path.join(__dirname, 'public', 'kJMnXVWMzrllXz5YdYWAM.woff2'), specialTxt: 'test woff2' },
 ]
 
 async function runTest() {
